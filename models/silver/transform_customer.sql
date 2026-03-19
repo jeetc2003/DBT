@@ -8,6 +8,7 @@ WITH source AS (
 cleaned AS (
  -- generic cleaning
     select 
+        date_of_file as file_date,
         customer_id,
         {{clean_text('first_name')}} as first_name,
         {{clean_text('last_name')}} as last_name,
@@ -32,6 +33,7 @@ cleaned AS (
 transformed AS (
 -- specific cleaning
     select
+        file_date,
         customer_id,
         total_spend,
         total_purchases,
