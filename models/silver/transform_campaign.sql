@@ -17,6 +17,7 @@ cleaned AS (
         -- dates
         try_to_date(start_ts) as start_date,
         try_to_date(end_ts) as end_date,
+        try_to_date(last_modified_date) as last_modified_date,
 
         -- clean budget (remove $, commas, spaces)
         TRY_TO_DECIMAL(
@@ -38,7 +39,7 @@ enriched AS (
         campaign_id,
         campaign_name,
         channel,
-
+        last_modified_date,
         start_date,
         end_date,
 
