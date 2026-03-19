@@ -40,5 +40,6 @@ models:
       +schema: BRONZE_LAYER
     silver:
       +schema: SILVER_LAYER
+      +materialized: table
     gold:
       +schema: GOLD_LAYER
