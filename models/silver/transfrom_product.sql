@@ -1,4 +1,5 @@
-
+{{ config(materialized='table',
+            schema='DBT.DBT_JCHOUDHARY_SILVER_LAYER' ) }}
 WITH source AS (
     SELECT * 
     FROM {{ source('bronze', 'product_data') }}
