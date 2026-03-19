@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: DBT
+    schema: bronze_layer
+    tables:
+      - name: customer_data
+      - name: campaign_data
+      - name: employee_data
+      - name: order_data
+      - name: store_data
+      - name: product_data
+      - name: supplier_data
