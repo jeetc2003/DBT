@@ -1,4 +1,4 @@
-{{ config(materialized='tables') }}
+{{ config(materialized='table') }}
 
 WITH source AS (
 
@@ -13,10 +13,16 @@ flattened AS (
     SELECT
         s.*,
         f.value AS item
+        -- -- EXTRACT FROM JSON
+        -- f.value:product_id::string as product_id,
+        -- f.value:quantity::int as quantity,
+        -- f.value:unit_price::float as unit_price,
+        -- f.value:cost_price::float as cost_price,
+        -- f.value:discount_amount::float as discount_amount,
 
 
     FROM source s,
-    LATERAL FLATTEN(input => PARSE_JSON(s.ORDER_ITEMS_ARRAY)) f,
+    LATERAL FLATTEN(input => s.ORDER_ITEMS_ARRAY) f,
      
 
 ),
@@ -36,12 +42,15 @@ cleaned AS (
         try_to_date(delivery_date) as delivery_date,
         try_to_date(estimated_delivery_date) as estimated_delivery_date,
 
+        -- item,
+        -- item:value,
+
         -- EXTRACT FROM JSON
-        item:value:product_id::string as product_id,
-        item:value:quantity::int as quantity,
-        item:value:unit_price::float as unit_price,
-        item:value:cost_price::float as cost_price,
-        item:value:discount_amount::float as discount_amount,
+        item:product_id::string as product_id,
+        item:quantity::int as quantity,
+        item:unit_price::float as unit_price,
+        item:cost_price::float as cost_price,
+        item:discount_amount::float as discount_amount,
 
         shipping_cost,
         tax_amount
@@ -58,9 +67,9 @@ aggregated AS (
         COUNT(product_id) as total_items,
         SUM(quantity) as total_quantity,
 
-        SUM(quantity * unit_price) as total_amount,
-        SUM(quantity * cost_price) as total_cost,
-        SUM(discount_amount) as total_discount
+        round(SUM(quantity * unit_price),2) as total_amount,
+        round(SUM(quantity * cost_price),2) as total_cost,
+        round(SUM(discount_amount),2) as total_discount
 
     FROM cleaned
     GROUP BY order_id
@@ -91,18 +100,17 @@ transformed AS (
         c.tax_amount,
 
         -- PROFIT CALCULATION
-        (a.total_amount 
+        round((a.total_amount 
             - a.total_cost 
             - a.total_discount 
             - c.shipping_cost 
-            - c.tax_amount) as profit_amount,
+            - c.tax_amount),2) as profit_amount,
 
-        (a.total_amount 
+        round((a.total_amount 
             - a.total_cost 
             - a.total_discount 
             - c.shipping_cost 
-            - c.tax_amount) / NULLIF(a.total_amount, 0) * 100 
-            as profit_margin_percent,
+            - c.tax_amount) / NULLIF(a.total_amount, 0) * 100,2) as profit_margin_percent,
 
         -- TIME OF DAY - CANT DO THIS COZ I REMOVED TIME PART FROM DATES WHILE RAW DARA TRANSFORMATIONS IN SNOWFLAKE. SORRY!!!
         -- CASE
