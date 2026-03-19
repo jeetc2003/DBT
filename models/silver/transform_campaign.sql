@@ -87,6 +87,7 @@ transformed AS (
         channel,
         start_date,
         end_date,
+        last_modified_date,
         campaign_duration_days,
         audience_segment,
         budget,

@@ -7,46 +7,40 @@ WITH source AS (
 
 deduplicated AS (
 
-SELECT *
-FROM source
-QUALIFY ROW_NUMBER() OVER (
-    PARTITION BY campaign_id
-    ORDER BY last_modified_date DESC
-) = 1
+    SELECT *
+    FROM (
+        SELECT *,
+            ROW_NUMBER() OVER (
+                PARTITION BY campaign_id
+                ORDER BY end_date DESC NULLS LAST
+            ) as rn
+        FROM source
+    )
+    WHERE rn = 1
 
 ),
 
 final AS (
 
-SELECT
-    campaign_id,
-    campaign_name,
+    SELECT
 
-    campaign_type,
-    channel,
+        -- surrogate key
+        ROW_NUMBER() OVER (ORDER BY campaign_id) as campaign_key,
 
-    description,
-    target_audience,
+        -- business key
+        campaign_id,
 
-    start_date,
-    end_date,
+        -- campaign attributes
+        audience_segment,
+        budget,
+        campaign_duration_days as duration,
+        expected_roi as roi,
 
-    /* calculate duration */
+        -- dates
+        start_date,
+        end_date
 
-    DATEDIFF(day,start_date,end_date) AS campaign_duration_days,
-
-    budget,
-    total_cost,
-    total_revenue,
-
-    /* use staging ROI */
-
-    roi_calculation AS calculated_roi,
-
-    last_modified_date
-
-FROM deduplicated
-
+    FROM deduplicated
 )
 
 SELECT * FROM final
